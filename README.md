@@ -1,6 +1,8 @@
 
 # terraria like 2D game
-first time making a cpp game, kind of terraria vibes in the look/movement but will be in a very different world /*-*/.
+An open-world 2D sandbox RPG inspired by games such as Terraria and Minecraft. Players can explore vast procedurally generated worlds, uncover hidden secrets, gather resources, craft powerful gear, construct unique bases, and face increasingly challenging enemies and bosses.
+
+Built in C++ with a strong emphasis on clean architecture, scalability, and performance, this project serves both as a game and as an exploration of advanced game development techniques.
 
 ## what will be added :
 
