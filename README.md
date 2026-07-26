@@ -4,21 +4,22 @@ An open-world 2D sandbox RPG inspired by games such as Terraria and Minecraft. P
 
 Built in C++ with a strong emphasis on clean architecture, scalability, and performance, this project serves both as a game and as an exploration of advanced game development techniques.
 
-## what will be added :
+## what will be added in V0.1 :
 
-- [ ] rendering system
+- [x] rendering system
 - [ ] world generator
 - [ ] player
-- [ ]  collisions
+- [ ] collisions
 - [ ] enemies
-- [ ] crafting
-- [ ] food
-- [ ] crops
-- [ ] bosses
 - [ ] structures
-- [ ] custom abilities
+
 
 ## distant future :
 
 - [ ] multiplayer
 - [ ] high quality textures
+- [ ] crafting
+- [ ] food
+- [ ] crops
+- [ ] custom abilities
+- [ ] bosses
