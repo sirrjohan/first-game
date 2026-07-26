@@ -85,6 +85,14 @@ int main()
 		ImGui::SliderFloat("slider for custom fps", &fps, 5, 1000);
 		ImGui::NewLine();
 
+		/*
+		ImGui::Text("camera");
+		ImGui::Separator();
+		ImGui::NewLine();
+
+		ImGui::SliderFloat("slider for custom zoom", &gameData.camera.zoom, 100.0f , 1000.0f);
+		ImGui::NewLine();
+		*/
 
 		if (ImGui::Button("show fps"))
 		{

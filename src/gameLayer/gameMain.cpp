@@ -5,9 +5,13 @@
 #include "gameMain.h"
 #include <asserts.h>
 #include <assetManager.h>
+#include <gameMap.h>
+#include <helpers.h>
 
 struct GameData
 {
+	GameMap gameMap;
+	Camera2D camera;
 
 }gameData;
 
@@ -18,8 +22,34 @@ bool initGame()
 {
 	assetManager.loadAll();
 
+	gameData.gameMap.create(30, 30);
+
+	for (int y = 0; y < gameData.gameMap.h; y++)
+		for (int x = 0; x < gameData.gameMap.w; x++)
+		{
+
+			float s = (std::sin(x) + 1.f) / 2.f;
+
+			if (gameData.gameMap.h - (gameData.gameMap.h * 0.3 * s) - gameData.gameMap.h * 0.5 < y)
+			{
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::dirt;
+			}
+			else
+			{
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::air;
+			}
+		}
+
+
+	gameData.camera.target = { 0,0 };
+	gameData.camera.rotation = 0.0f;
+	gameData.camera.zoom = 75.0f;
+
 	return true;
 }
+
+
+float selectedBlock = {};
 
 bool updateGame()
 {
@@ -29,7 +59,90 @@ bool updateGame()
 		deltaTime = 1 / 5.f;
 	}
 
-	DrawTexturePro(assetManager.dirt, { 0,0,(float)assetManager.dirt.width, (float)assetManager.dirt.height }, { 50,50,100,100 }, {}, 0, WHITE);
+	gameData.camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
+
+	ClearBackground({75, 75, 150, 255});
+
+#pragma region
+	if (IsKeyDown(KEY_LEFT))  gameData.camera.target.x  -= 7.f * deltaTime;
+	if (IsKeyDown(KEY_RIGHT)) gameData.camera.target.x  += 7.f * deltaTime;
+	if (IsKeyDown(KEY_UP))    gameData.camera.target.y  -= 7.f * deltaTime;
+	if (IsKeyDown(KEY_DOWN))  gameData.camera.target.y  += 7.f * deltaTime;
+#pragma endregion
+
+	Vector2 worldpos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+	int blockX = (int)floor(worldpos.x);
+	int blockY = (int)floor(worldpos.y);
+
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	{
+		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		if (b)
+		{
+			*b = {};
+		}
+	}
+	
+
+	if (IsKeyDown(KEY_Q))
+	{ 
+		selectedBlock = Block::woodPlank;
+	}
+
+	if (IsKeyDown(KEY_W))
+	{
+		selectedBlock = Block::woodLog;
+	}
+
+	if (IsKeyDown(KEY_E))
+	{
+		selectedBlock = Block::woodenChest;
+	}
+
+	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+	{
+		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		if (b)
+		{
+			b->type = selectedBlock;
+		}
+	}
+
+	BeginMode2D(gameData.camera);
+
+	for (int y = 0; y < gameData.gameMap.h; y++)
+	{
+		for (int x = 0; x < gameData.gameMap.w; x++)
+		{
+			auto& b = gameData.gameMap.getBlockUnsafe(x, y);
+			
+			if (b.type != Block::air)
+			{
+
+				DrawTexturePro(
+					assetManager.textures,
+					getTextureAtlas(b.type, 0, 32, 32), //source
+					{ (float)x, (float)y, 1, 1}, //dest
+					{ 0, 0 }, // origin (top left corner)
+					0.0f, //rotation
+					WHITE //tint
+				);
+			}
+		}
+	}
+
+	//draw selected block
+	DrawTexturePro(
+		assetManager.frame,
+		{ 0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height}, //source
+		{ (float) blockX, (float) blockY, 1, 1 }, //dest
+		{ 0, 0 }, // origin (top left corner)
+		0.0f, //rotation
+		WHITE //tint
+	);
+
+
+	EndMode2D();
 
 	return true;
 }
