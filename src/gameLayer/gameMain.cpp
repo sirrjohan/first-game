@@ -7,6 +7,8 @@
 #include <assetManager.h>
 #include <gameMap.h>
 #include <helpers.h>
+#include <raymath.h>
+
 
 struct GameData
 {
@@ -22,7 +24,7 @@ bool initGame()
 {
 	assetManager.loadAll();
 
-	gameData.gameMap.create(30, 30);
+	gameData.gameMap.create(300, 300);
 
 	for (int y = 0; y < gameData.gameMap.h; y++)
 		for (int x = 0; x < gameData.gameMap.w; x++)
@@ -49,7 +51,6 @@ bool initGame()
 }
 
 
-float selectedBlock = {};
 
 bool updateGame()
 {
@@ -74,6 +75,7 @@ bool updateGame()
 	int blockX = (int)floor(worldpos.x);
 	int blockY = (int)floor(worldpos.y);
 
+
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
 	{
 		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
@@ -83,36 +85,36 @@ bool updateGame()
 		}
 	}
 	
-
-	if (IsKeyDown(KEY_Q))
-	{ 
-		selectedBlock = Block::woodPlank;
-	}
-
-	if (IsKeyDown(KEY_W))
-	{
-		selectedBlock = Block::woodLog;
-	}
-
-	if (IsKeyDown(KEY_E))
-	{
-		selectedBlock = Block::woodenChest;
-	}
-
 	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
 	{
 		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
 		if (b)
 		{
-			b->type = selectedBlock;
+			b->type = Block::dirt;
 		}
 	}
 
+
 	BeginMode2D(gameData.camera);
 
-	for (int y = 0; y < gameData.gameMap.h; y++)
+	Vector2 topLeftView = GetScreenToWorld2D({ 0,0 }, gameData.camera);
+	Vector2 bottomRightView = GetScreenToWorld2D({ (float)GetScreenWidth(), (float)GetScreenHeight() }, gameData.camera);
+
+	int startXView = (int)floorf(topLeftView.x - 1);
+	int endXView = (int)ceilf(bottomRightView.x - 1);
+	int startYView = (int)floorf(topLeftView.y - 1);
+	int endYView = (int)ceilf(bottomRightView.y - 1);
+
+	startXView = Clamp(startXView, 0, gameData.gameMap.w - 1);
+	endXView = Clamp(endXView, 0, gameData.gameMap.w - 1);
+
+	startYView = Clamp(startYView, 0, gameData.gameMap.h - 1);
+	endYView = Clamp(endYView, 0, gameData.gameMap.h - 1);
+
+
+	for (int y = startYView; y <= endYView; y++)
 	{
-		for (int x = 0; x < gameData.gameMap.w; x++)
+		for (int x = startXView; x <= endXView; x++)
 		{
 			auto& b = gameData.gameMap.getBlockUnsafe(x, y);
 			
@@ -143,6 +145,8 @@ bool updateGame()
 
 
 	EndMode2D();
+	
+	DrawFPS(10, 10);
 
 	return true;
 }
