@@ -59,11 +59,16 @@ struct Block
 		boneWordrobe,
 		boneBookShelf,
 		bonePlatform,
-		manaMineral,
+		manaOre,
+		test,
 
 		BLOCKS_COUNT,
 
 	};
 
 	std::uint16_t type = 0;
+	
+	// Position en Pixel entre 0,32,64,96 soit 0x32,1x32,2x32,3x32 
+	std::uint16_t positionType = 0;
+
 };

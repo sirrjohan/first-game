@@ -8,6 +8,8 @@
 #include <gameMap.h>
 #include <helpers.h>
 #include <raymath.h>
+#include <difBlocks.h>
+#include <worldGenerator.h>
 
 
 struct GameData
@@ -19,33 +21,18 @@ struct GameData
 
 AssetManager assetManager;
 
+int selectedBlock = 0;
 
 bool initGame()
 {
 	assetManager.loadAll();
 
-	gameData.gameMap.create(300, 300);
-
-	for (int y = 0; y < gameData.gameMap.h; y++)
-		for (int x = 0; x < gameData.gameMap.w; x++)
-		{
-
-			float s = (std::sin(x) + 1.f) / 2.f;
-
-			if (gameData.gameMap.h - (gameData.gameMap.h * 0.3 * s) - gameData.gameMap.h * 0.5 < y)
-			{
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::dirt;
-			}
-			else
-			{
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::air;
-			}
-		}
+	generateWorld(gameData.gameMap);
 
 
 	gameData.camera.target = { 0,0 };
 	gameData.camera.rotation = 0.0f;
-	gameData.camera.zoom = 75.0f;
+	gameData.camera.zoom = 45.50f;
 
 	return true;
 }
@@ -65,15 +52,27 @@ bool updateGame()
 	ClearBackground({75, 75, 150, 255});
 
 #pragma region
-	if (IsKeyDown(KEY_LEFT))  gameData.camera.target.x  -= 7.f * deltaTime;
-	if (IsKeyDown(KEY_RIGHT)) gameData.camera.target.x  += 7.f * deltaTime;
-	if (IsKeyDown(KEY_UP))    gameData.camera.target.y  -= 7.f * deltaTime;
-	if (IsKeyDown(KEY_DOWN))  gameData.camera.target.y  += 7.f * deltaTime;
+	static float cameraSpeed = 10;
+
+	if (IsKeyDown(KEY_LEFT))  gameData.camera.target.x  -= cameraSpeed * GetFrameTime();
+	if (IsKeyDown(KEY_RIGHT)) gameData.camera.target.x  += cameraSpeed * GetFrameTime();
+	if (IsKeyDown(KEY_UP))    gameData.camera.target.y  -= cameraSpeed * GetFrameTime();
+	if (IsKeyDown(KEY_DOWN))  gameData.camera.target.y  += cameraSpeed * GetFrameTime();
 #pragma endregion
 
 	Vector2 worldpos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
 	int blockX = (int)floor(worldpos.x);
 	int blockY = (int)floor(worldpos.y);
+
+	if (IsKeyDown(KEY_W))
+	{
+		selectedBlock = Block::woodLog;
+	}
+	
+	if (IsKeyDown(KEY_Q))
+	{
+		selectedBlock = Block::leaves;
+	}
 
 
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -90,7 +89,7 @@ bool updateGame()
 		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
 		if (b)
 		{
-			b->type = Block::dirt;
+			b->type = selectedBlock;
 		}
 	}
 
@@ -116,20 +115,121 @@ bool updateGame()
 	{
 		for (int x = startXView; x <= endXView; x++)
 		{
-			auto& b = gameData.gameMap.getBlockUnsafe(x, y);
-			
-			if (b.type != Block::air)
+			auto &b = gameData.gameMap.getBlockUnsafe(x, y);
+
+
+			if (b.type != Block::air && b.type != Block::woodLog)
 			{
 
 				DrawTexturePro(
 					assetManager.textures,
-					getTextureAtlas(b.type, 0, 32, 32), //source
+					getTextureAtlas(b.type, difBlock((uint64_t)x, (uint64_t)y), 32, 32), //source
 					{ (float)x, (float)y, 1, 1}, //dest
 					{ 0, 0 }, // origin (top left corner)
 					0.0f, //rotation
 					WHITE //tint
 				);
+
 			}
+
+			if (b.type == Block::woodLog)
+			{
+				auto up = gameData.gameMap.getBlockSafe(x, y-1);
+				auto left = gameData.gameMap.getBlockSafe(x-1, y);
+				auto right = gameData.gameMap.getBlockSafe(x+1, y);
+				auto down = gameData.gameMap.getBlockSafe(x, y + 1);
+
+
+				if (up && left && right && up->type == Block::leaves && left->type == Block::leaves && right->type == Block::leaves) {
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(5, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				}else 
+				if (left && right && left->type == Block::leaves && right->type == Block::leaves) {
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(1, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				} else 
+				if (right && right->type == Block::leaves) {
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(2, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				}
+				else 
+				if (left && left->type == Block::leaves) {
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(3, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				}
+				else 
+					if (up && down && (up->type != Block::leaves && up->type != Block::air) && down->type != 0 && down->type != Block::woodLog) {
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(4, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				}
+				else if (up && down && up->type == Block::air && down->type == Block::woodLog)
+				{
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(6, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				}
+
+				else if (up && down && up->type == Block::air && (down->type != Block::woodLog && down->type != Block::air) )
+				{
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(7, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				}
+
+
+				else 
+				{
+					DrawTexturePro(
+						assetManager.woodenTextures,
+						getWoodenTextureAtlas(0, difBlock(x, y), 32, 32), //source
+						{ (float)x, (float)y, 1, 1 }, //dest
+						{ 0, 0 }, // origin (top left corner)
+						0.0f, //rotation
+						WHITE //tint
+					);
+				}
+			}
+
 		}
 	}
 
@@ -145,7 +245,20 @@ bool updateGame()
 
 
 	EndMode2D();
-	
+
+#pragma region imgui
+
+
+	ImGui::Begin("game controll");
+
+	ImGui::SliderFloat("camera zoom", &gameData.camera.zoom, 5, 160);
+	ImGui::SliderFloat("camera speed", &cameraSpeed, 5, 60);
+
+	ImGui::End();
+
+
+#pragma endregion
+
 	DrawFPS(10, 10);
 
 	return true;
