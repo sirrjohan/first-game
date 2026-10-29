@@ -135,9 +135,9 @@ bool updateGame()
 			if (b.type == Block::woodLog)
 			{
 				auto up = gameData.gameMap.getBlockSafe(x, y-1);
+				auto down = gameData.gameMap.getBlockSafe(x, y + 1);
 				auto left = gameData.gameMap.getBlockSafe(x-1, y);
 				auto right = gameData.gameMap.getBlockSafe(x+1, y);
-				auto down = gameData.gameMap.getBlockSafe(x, y + 1);
 
 
 				if (up && left && right && up->type == Block::leaves && left->type == Block::leaves && right->type == Block::leaves) {
